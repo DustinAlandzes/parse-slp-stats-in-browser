@@ -22,4 +22,4 @@ jobs:
 
       - name: Run stylelint
         run: |
-          npx stylelint
+          npx stylelint **/*.js
