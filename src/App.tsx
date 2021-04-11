@@ -39,12 +39,11 @@ function App() {
                     </Breadcrumb>
                     <Content
                         className="site-layout-background"
-                        style={{
-                            padding: 24,
-                            margin: 0,
-                            minHeight: 280,
-                            backgroundColor: "white"
-                        }}
+                        style={{padding: 24,
+  margin: 0,
+  minHeight: 280,
+  backgroundColor: "white"
+}}
                     >
                         <Typography>
                             <Title>Parse Slippi Folder</Title>

@@ -1,8 +1,12 @@
 name: Build and Deploy
-on: 
+on:
   push:
-    branches:
-      main
+    branches: [main]
+
+  # trigger build-and-deploy when there's a pull request to main
+  pull_request:
+    branches: [main]
+
 
 jobs:
   build-and-deploy:
@@ -11,10 +15,15 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v2.3.1
 
-      - name: Install and Build 🔧 # Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
+      - name: Install and Build 🔧
         run: |
           npm install
           npm run build
+
+      - name: Run stylelint
+        run: |
+          npx stylelint
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
