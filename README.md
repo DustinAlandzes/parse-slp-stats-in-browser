@@ -8,6 +8,8 @@ Use slippi-js to parse .slp files on the user's computer
 
 One-by-one, or maybe in bulk POST the parsed .slp files as json
 
+Similar to https://github.com/scottn12/SlippiStatsOnline
+
 ## future
 
 history of your melee play, supported by a backend
