@@ -1,6 +1,7 @@
 {
   "name": "parse-and-upload-slp",
   "version": "0.1.0",
+  "homepage": "./",
   "private": true,
   "dependencies": {
     "@slippi/slippi-js": "^5.1.1",
