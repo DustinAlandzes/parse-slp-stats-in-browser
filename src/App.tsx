@@ -2,7 +2,6 @@ import React from 'react';
 import './App.css';
 
 // slippi-js and node buffer polyfill so I can pass slippi files to it
-
 // antd
 import 'antd/dist/antd.css'
 import {Breadcrumb, Button, Layout, Menu, Typography, Upload} from 'antd';
@@ -12,7 +11,7 @@ const {Title, Paragraph, Text, Link} = Typography;
 const {Header, Content, Sider} = Layout;
 
 
-function App() {
+function App(): JSX.Element {
     return (
         <Layout>
             <Header className="header">
