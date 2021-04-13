@@ -1,20 +1,42 @@
-import React from 'react';
+import React, {useState} from 'react';
 import './App.css';
 
-// slippi-js and node buffer polyfill so I can pass slippi files to it
+// slippi-js and node buffer polyfill
+import {Buffer} from 'buffer';
+import SlippiGame from '@slippi/slippi-js'
+
 // antd
 import 'antd/dist/antd.css'
 import {Breadcrumb, Button, Layout, Menu, Typography, Upload} from 'antd';
 import {LaptopOutlined, UserOutlined} from '@ant-design/icons';
+import default_fox from './stock_icons/fox-default.png';
 
-const {Title, Paragraph, Text, Link} = Typography;
+const {Title, Paragraph} = Typography;
 const {Header, Content, Sider} = Layout;
 
-
 function App(): JSX.Element {
+
+    const [state, setState] = useState({fileList: []})
+
+    async function beforeUpload(file: File): Promise<File> {
+        console.log(file)
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file)
+        reader.onload = () => {
+            if (reader.result) {
+                const game = new SlippiGame(Buffer.from(reader.result));
+                // todo: show characters, duration, stage, winner in preview
+            }
+        }
+        return file
+    }
+
     return (
         <Layout>
-            <Header className="header">
+            <Header>
+                <a href="#">
+                    <img src={default_fox} style={{height: 32, float: 'left', marginTop: 16, marginRight: 16}}/>
+                </a>
                 <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
                     <Menu.Item key="1">Home</Menu.Item>
                 </Menu>
@@ -36,6 +58,7 @@ function App(): JSX.Element {
                         <Breadcrumb.Item>Home</Breadcrumb.Item>
                         <Breadcrumb.Item>Parse Slippi Folder</Breadcrumb.Item>
                     </Breadcrumb>
+                    {/* todo: separate component for this */}
                     <Content
                         className="site-layout-background"
                         style={{
@@ -54,46 +77,13 @@ function App(): JSX.Element {
                                 difficulties and
                                 duplication and reduce the efficiency of development.
                             </Paragraph>
-                            <Paragraph>
-                                After massive project practice and summaries, Ant Design, a design language for
-                                background
-                                applications, is refined by Ant UED Team, which aims to
-                                <Text strong>
-                                    uniform the user interface specs for internal background projects, lower the
-                                    unnecessary
-                                    cost of design differences and implementation and liberate the resources of design
-                                    and
-                                    front-end development
-                                </Text>.
-                            </Paragraph>
-                            <Title level={2}>Guidelines and Resources</Title>
-                            <Paragraph>
-                                We supply a series of design principles, practical patterns and high quality design
-                                resources
-                                (<Text code>Sketch</Text> and <Text code>Axure</Text>), to help people create their
-                                product
-                                prototypes beautifully and efficiently.
-                            </Paragraph>
-
-                            <Paragraph>
-                                <ul>
-                                    <li>
-                                        <Link href="#">Principles</Link>
-                                    </li>
-                                    <li>
-                                        <Link href="#">Patterns</Link>
-                                    </li>
-                                    <li>
-                                        <Link href="#">Resource Download</Link>
-                                    </li>
-                                </ul>
-                            </Paragraph>
                         </Typography>
                         <Upload
-                            onChange={console.log}
+                            //fileList={state.fileList}
+                            //onChange={handleChange}
                             action={'https://httpbin.org/post'}
-                            //previewFile={(file) => {}}
-
+                            //previewFile={previewFile}
+                            beforeUpload={beforeUpload}
                             directory>
                             <Button type="primary">
                                 Click me to open the prompt, and choose your Slippi folder
