@@ -12,6 +12,7 @@ import {LaptopOutlined, UserOutlined} from '@ant-design/icons';
 import {UploadChangeParam, UploadFile} from "antd/lib/upload/interface";
 
 import {CharacterAndColorToIconMap} from "./stock_icons"
+import {StageToIconMap} from "./stage_icons";
 
 const {Title, Paragraph} = Typography;
 const {Header, Content, Sider} = Layout;
@@ -58,15 +59,15 @@ function App(): JSX.Element {
             console.log(stats);
             console.log(metadata);
             console.log(settings);
-            if (metadata) {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
+            if (metadata && settings.stageId) {
+                const stage_name = stages.getStageName(settings.stageId)
+                const stage_icon = StageToIconMap[settings.stageId]
                 return <div>
                     {file.name} {metadata.startAt}
                     <div>
                         {settings.slpVersion}
                         <div>{"Duration (in seconds): "}{metadata.lastFrame && (Math.round(metadata.lastFrame / 60))}</div>
-                        <div>{"Stage: "}{settings.stageId && stages.getStageName(settings.stageId)}</div>
+                        <div>{"Stage: "}{stage_name}<img alt="stage icon" src={stage_icon}/></div>
                         {settings.players.map(player => {
                             if (player.characterId && player.characterColor && metadata.players) {
                                 const character_colors_to_icon = CharacterAndColorToIconMap[player.characterId]
