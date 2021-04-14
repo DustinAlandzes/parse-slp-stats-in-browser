@@ -3,40 +3,98 @@ import './App.css';
 
 // slippi-js and node buffer polyfill
 import {Buffer} from 'buffer';
-import SlippiGame from '@slippi/slippi-js'
+import SlippiGame, {characters, stages} from '@slippi/slippi-js'
 
 // antd
 import 'antd/dist/antd.css'
 import {Breadcrumb, Button, Layout, Menu, Typography, Upload} from 'antd';
 import {LaptopOutlined, UserOutlined} from '@ant-design/icons';
-import default_fox from './stock_icons/fox-default.png';
+import {UploadChangeParam, UploadFile} from "antd/lib/upload/interface";
+
+import {CharacterAndColorToIconMap} from "./stock_icons"
 
 const {Title, Paragraph} = Typography;
 const {Header, Content, Sider} = Layout;
 
+interface FileNameToSlippiGame {
+    [key: string]: SlippiGame
+}
+
 function App(): JSX.Element {
 
-    const [state, setState] = useState({fileList: []})
+    const [fileList, setFileList] = useState<UploadFile[]>([])
+    const [fileNameToGameMapping, setFileNameToGameMapping] = useState<FileNameToSlippiGame>({})
 
     async function beforeUpload(file: File): Promise<File> {
-        console.log(file)
         const reader = new FileReader();
         reader.readAsArrayBuffer(file)
         reader.onload = () => {
             if (reader.result) {
                 const game = new SlippiGame(Buffer.from(reader.result));
-                // todo: show characters, duration, stage, winner in preview
+                if (game) {
+                    setFileNameToGameMapping({...fileNameToGameMapping, [file.name]: game})
+                }
             }
         }
         return file
     }
 
+    function handleChange(info: UploadChangeParam) {
+        const fileList = [...info.fileList];
+        setFileList(fileList);
+    }
+
+    function itemRender(originNode: React.ReactElement, file: UploadFile, fileList?: UploadFile[]): React.ReactNode {
+        console.log(file);
+        console.log(fileList);
+        console.log(fileNameToGameMapping);
+        if (file.name in fileNameToGameMapping) {
+            const game = fileNameToGameMapping[file.name];
+            const end = game.getGameEnd()
+            const stats = game.getStats();
+            const metadata = game.getMetadata();
+            const settings = game.getSettings();
+            console.log(end);
+            console.log(stats);
+            console.log(metadata);
+            console.log(settings);
+            if (metadata) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                return <div>
+                    {file.name} {metadata.startAt}
+                    <div>
+                        {settings.slpVersion}
+                        <div>{"Duration (in seconds): "}{metadata.lastFrame && (Math.round(metadata.lastFrame / 60))}</div>
+                        <div>{"Stage: "}{settings.stageId && stages.getStageName(settings.stageId)}</div>
+                        {settings.players.map(player => {
+                            if (player.characterId && player.characterColor && metadata.players) {
+                                const character_colors_to_icon = CharacterAndColorToIconMap[player.characterId]
+                                const color_name = characters.getCharacterColorName(player.characterId, player.characterColor)
+                                const icon = character_colors_to_icon[color_name]
+
+                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                // @ts-ignore
+                                const name = metadata.players[player.playerIndex].names.code;
+
+                                return <div>
+                                    {name}
+                                    {<img alt="character icon" src={icon}/>}
+                                </div>
+                            } else {
+                                return <div>Unable to parse</div>
+                            }
+                        })}
+                    </div>
+                </div>
+            }
+        }
+        return <div>{file.name}</div>
+    }
+
     return (
         <Layout>
             <Header>
-                <a href="#">
-                    <img src={default_fox} style={{height: 32, float: 'left', marginTop: 16, marginRight: 16}}/>
-                </a>
                 <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
                     <Menu.Item key="1">Home</Menu.Item>
                 </Menu>
@@ -79,10 +137,10 @@ function App(): JSX.Element {
                             </Paragraph>
                         </Typography>
                         <Upload
-                            //fileList={state.fileList}
-                            //onChange={handleChange}
+                            fileList={fileList}
+                            onChange={handleChange}
                             action={'https://httpbin.org/post'}
-                            //previewFile={previewFile}
+                            itemRender={itemRender}
                             beforeUpload={beforeUpload}
                             directory>
                             <Button type="primary">
