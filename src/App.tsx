@@ -1,20 +1,101 @@
-import React from 'react';
+import React, {useState} from 'react';
 import './App.css';
 
-// slippi-js and node buffer polyfill so I can pass slippi files to it
+// slippi-js and node buffer polyfill
+import {Buffer} from 'buffer';
+import SlippiGame, {characters, stages} from '@slippi/slippi-js'
+
 // antd
 import 'antd/dist/antd.css'
 import {Breadcrumb, Button, Layout, Menu, Typography, Upload} from 'antd';
 import {LaptopOutlined, UserOutlined} from '@ant-design/icons';
+import {UploadChangeParam, UploadFile} from "antd/lib/upload/interface";
 
-const {Title, Paragraph, Text, Link} = Typography;
+import {CharacterAndColorToIconMap} from "./stock_icons"
+import {StageToIconMap} from "./stage_icons";
+
+const {Title, Paragraph} = Typography;
 const {Header, Content, Sider} = Layout;
 
+interface FileNameToSlippiGame {
+    [key: string]: SlippiGame
+}
 
 function App(): JSX.Element {
+
+    const [fileList, setFileList] = useState<UploadFile[]>([])
+    const [fileNameToGameMapping, setFileNameToGameMapping] = useState<FileNameToSlippiGame>({})
+
+    async function beforeUpload(file: File): Promise<File> {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file)
+        reader.onload = () => {
+            if (reader.result) {
+                const game = new SlippiGame(Buffer.from(reader.result));
+                if (game) {
+                    setFileNameToGameMapping({...fileNameToGameMapping, [file.name]: game})
+                }
+            }
+        }
+        return file
+    }
+
+    function handleChange(info: UploadChangeParam) {
+        const fileList = [...info.fileList];
+        setFileList(fileList);
+    }
+
+    function itemRender(originNode: React.ReactElement, file: UploadFile, fileList?: UploadFile[]): React.ReactNode {
+        console.log(file);
+        console.log(fileList);
+        console.log(fileNameToGameMapping);
+        if (file.name in fileNameToGameMapping) {
+            const game = fileNameToGameMapping[file.name];
+            const end = game.getGameEnd()
+            const stats = game.getStats();
+            const metadata = game.getMetadata();
+            const settings = game.getSettings();
+            console.log(end);
+            console.log(stats);
+            console.log(metadata);
+            console.log(settings);
+            if (metadata && settings.stageId) {
+                const stage_name = stages.getStageName(settings.stageId)
+                const stage_icon = StageToIconMap[settings.stageId]
+                return <div>
+                    {file.name} {metadata.startAt}
+                    <div>
+                        {settings.slpVersion}
+                        <div>{"Duration (in seconds): "}{metadata.lastFrame && (Math.round(metadata.lastFrame / 60))}</div>
+                        <div>{"Stage: "}{stage_name}<img alt="stage icon" src={stage_icon}/></div>
+                        {settings.players.map(player => {
+                            if (player.characterId && player.characterColor && metadata.players) {
+                                const character_colors_to_icon = CharacterAndColorToIconMap[player.characterId]
+                                const color_name = characters.getCharacterColorName(player.characterId, player.characterColor)
+                                const icon = character_colors_to_icon[color_name]
+
+                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                // @ts-ignore
+                                const name = metadata.players[player.playerIndex].names.code;
+
+                                return <div>
+                                    {name}
+                                    {<img alt="character icon" src={icon}/>}
+                                </div>
+                            } else {
+                                return <div>Unable to parse</div>
+                            }
+                        })}
+                    </div>
+                </div>
+            }
+        }
+        return <div>{file.name}</div>
+    }
+
     return (
         <Layout>
-            <Header className="header">
+            <Header>
                 <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
                     <Menu.Item key="1">Home</Menu.Item>
                 </Menu>
@@ -36,6 +117,7 @@ function App(): JSX.Element {
                         <Breadcrumb.Item>Home</Breadcrumb.Item>
                         <Breadcrumb.Item>Parse Slippi Folder</Breadcrumb.Item>
                     </Breadcrumb>
+                    {/* todo: separate component for this */}
                     <Content
                         className="site-layout-background"
                         style={{
@@ -54,46 +136,13 @@ function App(): JSX.Element {
                                 difficulties and
                                 duplication and reduce the efficiency of development.
                             </Paragraph>
-                            <Paragraph>
-                                After massive project practice and summaries, Ant Design, a design language for
-                                background
-                                applications, is refined by Ant UED Team, which aims to
-                                <Text strong>
-                                    uniform the user interface specs for internal background projects, lower the
-                                    unnecessary
-                                    cost of design differences and implementation and liberate the resources of design
-                                    and
-                                    front-end development
-                                </Text>.
-                            </Paragraph>
-                            <Title level={2}>Guidelines and Resources</Title>
-                            <Paragraph>
-                                We supply a series of design principles, practical patterns and high quality design
-                                resources
-                                (<Text code>Sketch</Text> and <Text code>Axure</Text>), to help people create their
-                                product
-                                prototypes beautifully and efficiently.
-                            </Paragraph>
-
-                            <Paragraph>
-                                <ul>
-                                    <li>
-                                        <Link href="#">Principles</Link>
-                                    </li>
-                                    <li>
-                                        <Link href="#">Patterns</Link>
-                                    </li>
-                                    <li>
-                                        <Link href="#">Resource Download</Link>
-                                    </li>
-                                </ul>
-                            </Paragraph>
                         </Typography>
                         <Upload
-                            onChange={console.log}
+                            fileList={fileList}
+                            onChange={handleChange}
                             action={'https://httpbin.org/post'}
-                            //previewFile={(file) => {}}
-
+                            itemRender={itemRender}
+                            beforeUpload={beforeUpload}
                             directory>
                             <Button type="primary">
                                 Click me to open the prompt, and choose your Slippi folder
