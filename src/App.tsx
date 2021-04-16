@@ -23,7 +23,7 @@ function App(): JSX.Element {
         <Layout>
             <Header style={{position: 'fixed', zIndex: 1, width: '100%', backgroundColor: 'white'}}>
                 {/* todo: select current item based on url */}
-                <img alt="random stock icon" src={list_of_stock_icons[getRandomInt(list_of_stock_icons.length)]}
+                <img alt={"random stock icon"} src={list_of_stock_icons[getRandomInt(list_of_stock_icons.length)]}
                      style={{float: 'left', marginTop: '1.5em', marginRight: '1.5em'}}/>
                 <Menu mode="horizontal" defaultSelectedKeys={['1']}>
                     <Menu.Item key="1"><Link href="/">Home</Link></Menu.Item>
