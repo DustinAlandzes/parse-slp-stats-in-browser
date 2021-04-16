@@ -1,156 +1,52 @@
-import React, {useState} from 'react';
-import './App.css';
+import React from 'react';
 
-// slippi-js and node buffer polyfill
-import {Buffer} from 'buffer';
-import SlippiGame, {characters, stages} from '@slippi/slippi-js'
+import UploadScreen from "./UploadScreen";
+import GameHistory from "./GameHistory";
+import {list_of_stock_icons} from "./stock_icons"
+// wouter
+import {Link, Route} from "wouter";
 
 // antd
 import 'antd/dist/antd.css'
-import {Breadcrumb, Button, Layout, Menu, Typography, Upload} from 'antd';
-import {LaptopOutlined, UserOutlined} from '@ant-design/icons';
-import {UploadChangeParam, UploadFile} from "antd/lib/upload/interface";
+import {GithubOutlined, SmileOutlined} from '@ant-design/icons';
 
-import {CharacterAndColorToIconMap} from "./stock_icons"
-import {StageToIconMap} from "./stage_icons";
+import {Avatar, BackTop, Divider, Layout, Menu} from 'antd';
+import {Content, Footer, Header} from "antd/lib/layout/layout";
+import Home from "./Home";
 
-const {Title, Paragraph} = Typography;
-const {Header, Content, Sider} = Layout;
-
-interface FileNameToSlippiGame {
-    [key: string]: SlippiGame
+function getRandomInt(max: number): number {
+    return Math.floor(Math.random() * max);
 }
 
 function App(): JSX.Element {
-
-    const [fileList, setFileList] = useState<UploadFile[]>([])
-    const [fileNameToGameMapping, setFileNameToGameMapping] = useState<FileNameToSlippiGame>({})
-
-    async function beforeUpload(file: File): Promise<File> {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file)
-        reader.onload = () => {
-            if (reader.result) {
-                const game = new SlippiGame(Buffer.from(reader.result));
-                if (game) {
-                    setFileNameToGameMapping({...fileNameToGameMapping, [file.name]: game})
-                }
-            }
-        }
-        return file
-    }
-
-    function handleChange(info: UploadChangeParam) {
-        const fileList = [...info.fileList];
-        setFileList(fileList);
-    }
-
-    function itemRender(originNode: React.ReactElement, file: UploadFile, fileList?: UploadFile[]): React.ReactNode {
-        console.log(file);
-        console.log(fileList);
-        console.log(fileNameToGameMapping);
-        if (file.name in fileNameToGameMapping) {
-            const game = fileNameToGameMapping[file.name];
-            const end = game.getGameEnd()
-            const stats = game.getStats();
-            const metadata = game.getMetadata();
-            const settings = game.getSettings();
-            console.log(end);
-            console.log(stats);
-            console.log(metadata);
-            console.log(settings);
-            if (metadata && settings.stageId) {
-                const stage_name = stages.getStageName(settings.stageId)
-                const stage_icon = StageToIconMap[settings.stageId]
-                return <div>
-                    {file.name} {metadata.startAt}
-                    <div>
-                        {settings.slpVersion}
-                        <div>{"Duration (in seconds): "}{metadata.lastFrame && (Math.round(metadata.lastFrame / 60))}</div>
-                        <div>{"Stage: "}{stage_name}<img alt="stage icon" src={stage_icon}/></div>
-                        {settings.players.map(player => {
-                            if (player.characterId && player.characterColor && metadata.players) {
-                                const character_colors_to_icon = CharacterAndColorToIconMap[player.characterId]
-                                const color_name = characters.getCharacterColorName(player.characterId, player.characterColor)
-                                const icon = character_colors_to_icon[color_name]
-
-                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                // @ts-ignore
-                                const name = metadata.players[player.playerIndex].names.code;
-
-                                return <div>
-                                    {name}
-                                    {<img alt="character icon" src={icon}/>}
-                                </div>
-                            } else {
-                                return <div>Unable to parse</div>
-                            }
-                        })}
-                    </div>
-                </div>
-            }
-        }
-        return <div>{file.name}</div>
-    }
-
     return (
         <Layout>
-            <Header>
-                <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
-                    <Menu.Item key="1">Home</Menu.Item>
+            <Header style={{position: 'fixed', zIndex: 1, width: '100%', backgroundColor: 'white'}}>
+                {/* todo: select current item based on url */}
+                <img src={list_of_stock_icons[getRandomInt(list_of_stock_icons.length)]}
+                     style={{float: 'left', marginTop: '1.5em', marginRight: '1.5em'}}/>
+                <Menu mode="horizontal" defaultSelectedKeys={['1']}>
+                    <Menu.Item key="1"><Link href="/">Home</Link></Menu.Item>
+                    <Menu.Item key="2"><Link href="/upload">Parse Slippi Folder</Link></Menu.Item>
+                    <Menu.Item key="3"><Link href="/history">Game History</Link></Menu.Item>
+                    <Avatar icon={<SmileOutlined/>} style={{float: 'right', marginTop: '1em'}}/>
                 </Menu>
             </Header>
             <Layout>
-                <Sider width={200} className="site-layout-background">
-                    <Menu
-                        mode="inline"
-                        defaultSelectedKeys={['1']}
-                        defaultOpenKeys={['sub1']}
-                        style={{height: '100%', borderRight: 0}}
-                    >
-                        <Menu.Item key="1" icon={<LaptopOutlined/>}>Parse Slippi Folder</Menu.Item>
-                        <Menu.Item key="2" icon={<UserOutlined/>}>Logout</Menu.Item>
-                    </Menu>
-                </Sider>
-                <Layout style={{padding: '0 24px 24px'}}>
-                    <Breadcrumb style={{margin: '16px 0'}}>
-                        <Breadcrumb.Item>Home</Breadcrumb.Item>
-                        <Breadcrumb.Item>Parse Slippi Folder</Breadcrumb.Item>
-                    </Breadcrumb>
-                    {/* todo: separate component for this */}
-                    <Content
-                        className="site-layout-background"
-                        style={{
-                            padding: 24,
-                            margin: 0,
-                            minHeight: 280,
-                            backgroundColor: "white"
-                        }}
-                    >
-                        <Typography>
-                            <Title>Parse Slippi Folder</Title>
-                            <Paragraph>
-                                In the process of internal desktop applications development, many different design specs
-                                and
-                                implementations would be involved, which might cause designers and developers
-                                difficulties and
-                                duplication and reduce the efficiency of development.
-                            </Paragraph>
-                        </Typography>
-                        <Upload
-                            fileList={fileList}
-                            onChange={handleChange}
-                            action={'https://httpbin.org/post'}
-                            itemRender={itemRender}
-                            beforeUpload={beforeUpload}
-                            directory>
-                            <Button type="primary">
-                                Click me to open the prompt, and choose your Slippi folder
-                            </Button>
-                        </Upload>
-                    </Content>
-                </Layout>
+                <Content style={{padding: '10px 50px', marginTop: 64}}>
+                    <div style={{padding: 24, minHeight: 380}}>
+                        <Route path="/" component={Home}/>
+                        <Route path="/upload" component={UploadScreen}/>
+                        <Route path="/history" component={GameHistory}/>
+                    </div>
+                </Content>
+                <Footer style={{textAlign: 'center'}}>
+                    <a href="https://github.com/DustinAlandzes/parse-slp-stats-in-browser"><GithubOutlined/></a>
+                    <Divider type="vertical"/>
+                    {"slp.spaceanimalz.com"}
+                </Footer>
             </Layout>
+            <BackTop/>
         </Layout>
     );
 }
