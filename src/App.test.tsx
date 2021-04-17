@@ -4,6 +4,6 @@ import App from './App';
 
 test('renders learn react link', () => {
   render(<App />);
-  const linkElement = screen.getByText(/Click me to open the prompt, and choose your Slippi folder/i);
+  const linkElement = screen.getByText(/Parse Slippi Folder/i);
   expect(linkElement).toBeInTheDocument();
 });

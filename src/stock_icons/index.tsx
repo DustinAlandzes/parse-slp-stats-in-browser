@@ -335,3 +335,10 @@ export const CharacterAndColorToIconMap: CharacterAndColorToIcon = {
     },
 
 }
+
+
+export const list_of_stock_icons = Object.keys(CharacterAndColorToIconMap).flatMap(character => {
+    return Object.values(CharacterAndColorToIconMap[parseInt(character)])
+})
+
+export {green_dk}
